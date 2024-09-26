@@ -1,0 +1,3 @@
+@echo off
+echo Starting frontend and backend servers...
+npx concurrently "cd frontend && npm start" "cd backend && npx nodemon server.js"
