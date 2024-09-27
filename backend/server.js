@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const loginRoute = require('./routes/login');
 const stashRoute = require('./routes/stash');
+const parseRoute = require('./routes/parse');
 
 dotenv.config();
 
@@ -35,7 +36,7 @@ app.use('/login', loginRoute);
 
 // Use stash route
 app.use('/stash', stashRoute);
-
+app.use('/parse', parseRoute);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

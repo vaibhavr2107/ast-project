@@ -14,6 +14,10 @@ function Sidebar() {
           <img src="https://cdn-icons-png.flaticon.com/512/6125/6125001.png" alt="Stash" />
           Stash Copy
         </NavLink>
+        <NavLink to="/parser" className={({ isActive }) => `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`}>
+          <img src="https://cdn-icons-png.flaticon.com/512/6125/6125001.png" alt="Stash" />
+          Parser
+        </NavLink>
         
       </nav>
     </aside>

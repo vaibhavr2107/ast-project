@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import Home from './pages/Home';
 import Stash from './pages/Stash';
+import Parser from './pages/Parser';
 import './App.scss';
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/stash" element={<Stash />} />
+              <Route path="/parser" element={<Parser />} />
             </Routes>
           </main>
         </div>
