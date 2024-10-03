@@ -2,16 +2,18 @@ import os
 import javalang
 from javalang.tree import MethodDeclaration, MethodInvocation
 from javalang.parse import parse
+from tabulate import tabulate
 import logging
+from datetime import datetime
+import subprocess
+import tempfile
 import json
-import sys
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 class EndpointAnalyzer:
-    def __init__(self, project_directory):
-        self.project_directory = project_directory
+    def __init__(self):
         self.endpoints = []
         self.rest_count = 0
         self.soap_count = 0
@@ -49,8 +51,10 @@ class EndpointAnalyzer:
             except Exception as e:
                 logger.error(f"Error processing file {java_file}: {e}")
 
-    def analyze_endpoints(self):
-        java_files = self.list_java_files(self.project_directory)
+
+
+    def analyze_endpoints(self, project_dir):
+        java_files = self.list_java_files(project_dir)
         all_java_files = java_files 
         self.build_method_map(all_java_files)
         
@@ -95,47 +99,7 @@ class EndpointAnalyzer:
             except Exception as e:
                 logger.error(f"Error processing file {java_file}: {e}")
 
-        return self.generate_output()
-
-    def generate_output(self):
-        output = {
-            "endpoints": [],
-            "summary": {}
-        }
-
-        for endpoint in self.endpoints:
-            endpoint_data = {
-                "method": endpoint['method'],
-                "file": endpoint['file'],
-                "endpoint_type": endpoint['endpoint_type'],
-                "flow": [f"{method_name} ({method_class})" for method_name, method_class in endpoint['flow']],
-                "tsys_calls": endpoint['tsys_calls'],
-                "amq_calls": endpoint['amq_calls'],
-                "proc_calls": endpoint['proc_calls']
-            }
-            output["endpoints"].append(endpoint_data)
-
-        output["summary"] = {
-            "total_endpoints": self.rest_count + self.soap_count,
-            "soap_endpoints": {
-                "count": self.soap_count,
-                "tsys_calls": len(self.tsys_endpoints_soap),
-                "tsys_endpoints": self.tsys_endpoints_soap,
-                "amq_calls": len(self.amq_endpoints_soap),
-                "amq_endpoints": self.amq_endpoints_soap
-            },
-            "rest_endpoints": {
-                "count": self.rest_count,
-                "tsys_calls": len(self.tsys_endpoints_rest),
-                "tsys_endpoints": self.tsys_endpoints_rest,
-                "amq_calls": len(self.amq_endpoints_rest),
-                "amq_endpoints": self.amq_endpoints_rest
-            },
-            "stored_proc_calls": len([ep for ep in self.endpoints if ep['proc_calls']]),
-            "stored_proc_endpoints": [ep['method'] for ep in self.endpoints if ep['proc_calls']]
-        }
-
-        return json.dumps(output, indent=2)
+        self.save_output_to_file()
 
     def is_rest_or_soap_endpoint(self, node):
         for annotation in node.annotations:
@@ -199,16 +163,53 @@ class EndpointAnalyzer:
         }
         return any(method_name.lower() == sk for sk in skippable_methods)
 
+    def save_output_to_file(self):
+        output = {
+            "endpoints": [],
+            "summary": {}
+        }
+
+        for endpoint in self.endpoints:
+            endpoint_data = {
+                "method": endpoint['method'],
+                "file": endpoint['file'],
+                "endpoint_type": endpoint['endpoint_type'],
+                "flow": [f"{method_name} ({method_class})" for method_name, method_class in endpoint['flow']],
+                "tsys_calls": endpoint['tsys_calls'],
+                "amq_calls": endpoint['amq_calls'],
+                "proc_calls": endpoint['proc_calls']
+            }
+            output["endpoints"].append(endpoint_data)
+
+        output["summary"] = {
+            "total_endpoints": self.rest_count + self.soap_count,
+            "soap_endpoints": {
+                "count": self.soap_count,
+                "tsys_calls": len(self.tsys_endpoints_soap),
+                "tsys_endpoints": self.tsys_endpoints_soap,
+                "amq_calls": len(self.amq_endpoints_soap),
+                "amq_endpoints": self.amq_endpoints_soap
+            },
+            "rest_endpoints": {
+                "count": self.rest_count,
+                "tsys_calls": len(self.tsys_endpoints_rest),
+                "tsys_endpoints": self.tsys_endpoints_rest,
+                "amq_calls": len(self.amq_endpoints_rest),
+                "amq_endpoints": self.amq_endpoints_rest
+            },
+            "stored_proc_calls": len([ep for ep in self.endpoints if ep['proc_calls']]),
+            "stored_proc_endpoints": [ep['method'] for ep in self.endpoints if ep['proc_calls']]
+        }
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"endpoint_analysis_{timestamp}.json"
+
+        with open(file_name, "w") as f:
+            json.dump(output, f, indent=2)
+
+        logger.info(f"Analysis saved to {file_name}")
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python java_ast_parser.py <project_directory>")
-        sys.exit(1)
-
-    project_directory = sys.argv[1]
-    if not os.path.isdir(project_directory):
-        print(f"Error: {project_directory} is not a valid directory")
-        sys.exit(1)
-
-    analyzer = EndpointAnalyzer(project_directory)
-    result = analyzer.analyze_endpoints()
-    print(result)  # This will print the JSON output
+    project_directory = "E://projects//ast-project//backend//temp_repos//spring-test" # Replace with your project directory
+    analyzer = EndpointAnalyzer()
+    analyzer.analyze_endpoints(project_directory)

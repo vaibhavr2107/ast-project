@@ -8,6 +8,7 @@ import Parser from './pages/Parser';
 import './App.scss';
 
 function App() {
+  
   return (
     <Router>
       <div className="app">

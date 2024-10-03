@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { useTable } from 'react-table';
 import axios from 'axios';
+import DataTable from 'react-data-table-component';
+import DataTableExtensions from 'react-data-table-component-extensions';
+import 'react-data-table-component-extensions/dist/index.css';
 
 const Parser = () => {
   const [cloneUrl, setCloneUrl] = useState('');
@@ -16,7 +18,8 @@ const Parser = () => {
     setError(null);
     try {
       const response = await axios.post('/parse', { cloneUrl, username, password });
-      setParseResult(response.data.parseResult);
+      console.log(response.data)
+      setParseResult(response.data);
     } catch (err) {
       setError('Failed to parse repository. Please check your inputs and try again.');
       console.error('Error parsing repository:', err);
@@ -25,107 +28,152 @@ const Parser = () => {
     }
   };
 
-  const columns = useMemo(
-    () => [
-      {
-        Header: 'File Path',
-        accessor: 'filePath',
-      },
-      {
-        Header: 'Methods',
-        accessor: 'methods',
-        Cell: ({ value }) => value.join(', ')
-      },
-    ],
-    []
-  );
+  const columns = useMemo(() => [
+    {
+      name: 'Method',
+      selector: row => row.method,
+      cellExport: row => row.method,
+      sortable: true,
+    },
+    {
+      name: 'File',
+      selector: row => row.file,
+      cellExport: row => row.file,
+      sortable: true,
+    },
+    {
+      name: 'Endpoint Type',
+      selector: row => row.endpoint_type,
+      cellExport: row => row.endpoint_type,
+      sortable: true,
+    },
+    {
+      name: 'Flow',
+      selector: row => row.flow,
+      cell: row => (
+        <ul style={{ margin: 0, paddingLeft: '20px' }}>
+          {row.flow.map((item, index) => (
+            <li key={index}>{item}</li>
+          ))}
+        </ul>
+      ),
+      cellExport: row => row.flow.join(', '),
+      sortable: true,
+    },
+    {
+      name: 'TSYS Calls',
+      selector: row => row.tsys_calls.join(', '),
+      cellExport: row => row.tsys_calls.join(', '),
+      sortable: true,
+    },
+    {
+      name: 'AMQ Calls',
+      selector: row => row.amq_calls.join(', '),
+      cellExport: row => row.amq_calls.join(', '),
+      sortable: true,
+    },
+    {
+      name: 'Proc Calls',
+      selector: row => row.proc_calls.join(', '),
+      cellExport: row => row.proc_calls.join(', '),
+      sortable: true,
+    },
+  ], []);
 
   const data = useMemo(() => {
     if (!parseResult) return [];
-    return Object.entries(parseResult).map(([filePath, methods]) => ({
-      filePath,
-      methods,
-    }));
+    return parseResult.parseResult.endpoints;
   }, [parseResult]);
 
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({ columns, data });
+  const tableData = {
+    columns,
+    data,
+  };
+
+  const summaryColumns = useMemo(() => [
+    { name: 'Total Endpoints', selector: row => row.total_endpoints, cellExport: row => row.total_endpoints, sortable: true },
+    { name: 'SOAP Endpoints', selector: row => row.soap_endpoints.count, cellExport: row => row.soap_endpoints.count, sortable: true },
+    { name: 'REST Endpoints', selector: row => row.rest_endpoints.count, cellExport: row => row.rest_endpoints.count, sortable: true },
+    { name: 'Stored Proc Calls', selector: row => row.stored_proc_calls, cellExport: row => row.stored_proc_calls, sortable: true },
+  ], []);
+
+  const summaryData = useMemo(() => {
+    if (!parseResult) return [];
+    return [parseResult.parseResult.summary];
+  }, [parseResult]);
+
+  const summaryTableData = {
+    columns: summaryColumns,
+    data: summaryData,
+  };
 
   return (
     <div className="parser-container">
-      <form onSubmit={handleSubmit} className="parser-form">
-        <div className="form-group">
-          <label htmlFor="cloneUrl">Repository cloneUrl:</label>
-          <input
-            type="text"
-            id="cloneUrl"
-            value={cloneUrl}
-            onChange={(e) => setCloneUrl(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" disabled={loading}>
-          {loading ? 'Parsing...' : 'Parse Repository'}
-        </button>
-      </form>
+      <div className="form-container">
+        <h1>Welcome back!</h1>
+        <p>Start parsing your repository faster and better</p>
+        <form onSubmit={handleSubmit} className="parser-form">
+          <div className="form-group">
+            <input
+              type="text"
+              value={cloneUrl}
+              onChange={(e) => setCloneUrl(e.target.value)}
+              placeholder="Repository URL"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              required
+            />
+          </div>
+          <button type="submit" disabled={loading}>
+            {loading ? 'Parsing...' : 'Parse'}
+          </button>
+        </form>
+        {error && <p className="error">{error}</p>}
+      </div>
 
-      {error && <p className="error">{error}</p>}
-      
       {parseResult && (
         <div className="result-container">
-          <h2>Parse Result:</h2>
-          <table {...getTableProps()} className="result-table">
-            <thead>
-              {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                  {headerGroup.headers.map(column => (
-                    <th {...column.getHeaderProps()}>
-                      {column.render('Header')}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody {...getTableBodyProps()}>
-              {rows.map(row => {
-                prepareRow(row);
-                return (
-                  <tr {...row.getRowProps()}>
-                    {row.cells.map(cell => (
-                      <td {...cell.getCellProps()}>
-                        {cell.render('Cell')}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <h2>Summary</h2>
+          <DataTableExtensions {...summaryTableData}>
+            <DataTable
+              columns={summaryColumns}
+              data={summaryData}
+              noHeader
+              defaultSortField="total_endpoints"
+              defaultSortAsc={false}
+              pagination
+              highlightOnHover
+            />
+          </DataTableExtensions>
+
+          <h2>Endpoints</h2>
+          <DataTableExtensions {...tableData}>
+            <DataTable
+              columns={columns}
+              data={data}
+              noHeader
+              defaultSortField="method"
+              defaultSortAsc={false}
+              pagination
+              highlightOnHover
+            />
+          </DataTableExtensions>
         </div>
       )}
     </div>

@@ -292,81 +292,111 @@ body, html {
   }
 }
 
+// Existing styles in app.scss...
 
+// Parser component styles
 .parser-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8f9fa;
 
-  .parser-form {
-    background-color: #f5f5f5;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-bottom: 20px;
+  .form-container {
+    
+      min-width: 350px;
+      width: 30%;
+      max-height: 350px;
+      padding: 20px;
+      background-color: #ffffff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  
 
-    .form-group {
-      margin-bottom: 15px;
+    h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
 
-      label {
-        display: block;
-        margin-bottom: 5px;
+    p {
+      margin-bottom: 20px;
+      color: #666;
+    }
+
+    .parser-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+
+      .form-group {
+        position: relative;
+
+        input {
+          width: 100%;
+          padding: 6px;
+          border: 1px solid #e0e0e0;
+          border-radius: 4px;
+          font-size: 14px;
+          background-color: #f8f9fa;
+
+          &::placeholder {
+            color: #aaa;
+          }
+        }
       }
 
-      input {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
+      button {
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
         border-radius: 4px;
-        box-sizing: border-box;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+          background-color: #0056b3;
+        }
+
+        &:disabled {
+          background-color: #cccccc;
+        }
       }
     }
 
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-
-      &:disabled {
-        background-color: #cccccc;
-        cursor: not-allowed;
-      }
+    .error {
+      color: red;
+      margin-top: 10px;
     }
-  }
-
-  .error {
-    color: red;
-    text-align: center;
-    margin-bottom: 15px;
   }
 
   .result-container {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+
     h2 {
-      text-align: center;
-    }
-
-    .result-table {
-      width: 100%;
-      border-collapse: collapse;
       margin-top: 20px;
-
-      th, td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-      }
-
-      th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-      }
-
-      tr:nth-child(even) {
-        background-color: #f9f9f9;
-      }
+      margin-bottom: 10px;
     }
   }
 }
+
+// Overriding some DataTableExtensions styles
+.react-data-table-component-extension-filter {
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.react-data-table-component-extension-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+}
+
